@@ -1,0 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from time import gmtime, strftime
+
+def IsNumeric(s): # Function to convert to int
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+input_file_names = ['univ1_pt1.txt']
+
+output = open('train2.txt','w')
+#output2 = open('train2.t','w')
+
+counter = 1
+pkt_length = 0
+for file in input_file_names:
+        with open(file,'r') as input_file:
+            inp = input_file.readlines()
+            for line in inp:
+                #print counter
+                line2 = line.split(" ")
+                length_line = len(line2)
+                #print line2
+                #print  length_line
+                if length_line > 7:
+                    src_isvalid = len(line2[3].split("."))
+                    #print src_isvalid
+                    lenghtvalid = line2[len(line2)-1]
+                    #print lenghtvalid
+                    if ((line2[3] != "Request") and (line2[2] != "ARP") and (line2[3] != "Reply")) and (line2[6] != "ICMP")\
+                            and (line2[6] != "HSRPv0-hello") and (src_isvalid > 4) and (line2[5] != "is-at")\
+                            and (line2[7] != "isakmp") and (line2[2] != "MS") and (line2[6] != "NBT") : # Igonre ARP Request and ICMP Packets
+                        if IsNumeric(lenghtvalid):
+                            pkt_length = int(line2[len(line2)-1]) # Print the size of TCP and UDP packets
+                            threshold = 800
+                            flag = 0
+                            src_ip = 0
+                            src_port = 0
+                            dst_ip = 0
+                            dst_port = 0
+                            src_split_ip = line2[3].split(".")
+                            src_port = src_split_ip[len(src_split_ip)-1]
+                            src_ip = "".join(src_split_ip[:len(src_split_ip)-1])
+                            dst_isvalid = len(line2[5].split(":"))
+                            #print dst_isvalid
+                            if dst_isvalid > 1 :
+                                value = line2[5].split(":")
+                                dst_split_ip = value[0].split(".")
+                                dst_port = dst_split_ip[len(dst_split_ip)-1]
+                                dst_ip = "".join(dst_split_ip[:len(dst_split_ip)-1])
+                            if pkt_length > threshold:  # Elephant Flow
+                                flag = 1
+
+                            else:           # Mice Flow
+                                flag = -1
+
+                            output.write(str(flag)+" "+ str("1:"+src_ip)+" "+ str("2:"+src_port)+" "+ str("3:"+dst_ip)+" "+ str("4:"+dst_port)+"\n")
+                           # output2.write(str(flag)+ " " + str("1:" + src_ip) + " " + str("2:" + src_port) + " " + str("3:" + dst_ip) + " " + str("4:" + dst_port) + "\n")
+
+                            #print "src ip"+src_ip
+                            #print "src p"+dst_ip
+                            counter = counter+1
+                    else:
+                        counter = counter+1
+
+print strftime("%Y-%m-%d %H:%M:%S"), ":", "printing training file:"
+print strftime("%Y-%m-%d %H:%M:%S"), ":", "saved file"
+#print strftime("%Y-%m-%d %H:%M:%S"), ":", "printing testing file:"
+#print strftime("%Y-%m-%d %H:%M:%S"), ":", "saved file"
+output.close()
